@@ -26,6 +26,7 @@ except ImportError:
     # actually unused right now while we use redis as a ros package
     sys.exit("\n[ERROR] No python-redis found - 'rosdep install rocon_hub'\n")
 import rocon_semantic_version as semantic_version
+import rocon_console.console as console
 
 from . import utils
 
@@ -85,8 +86,8 @@ class RedisServer:
 
         # Checks
         if not os.path.isfile(package_redis_conf_file):
-            utils.logfatal("Hub : the version of the redis server you have installed is not supported by rocon.")
-            sys.exit(utils.logfatal("Hub : please submit a ticket at https://github.com/robotics-in-concert/rocon_multimaster"))
+            console.logfatal("Hub : the version of the redis server you have installed is not supported by rocon.")
+            sys.exit(console.logfatal("Hub : please submit a ticket at https://github.com/robotics-in-concert/rocon_multimaster"))
 
         redis_conf_template = utils.read_template(package_redis_conf_file)
         redis_conf_template = instantiate_redis_conf_template(redis_conf_template, self._files['redis_conf_local'])  # drop the local file path to use into the settings
@@ -139,7 +140,7 @@ class RedisServer:
                 count += 1
                 if count == no_attempts:
                     self.shutdown()
-                    sys.exit(utils.logfatal("Hub : could not connect to the redis server - is it running?"))
+                    sys.exit(console.logfatal("Hub : could not connect to the redis server - is it running?"))
                 else:
                     rospy.rostime.wallsleep(0.1)
 
