@@ -37,11 +37,12 @@ class HubConnectionCheckerThread(threading.Thread):
       Pings redis periodically to figure out if the redis connection is still alive.
     '''
 
-    def __init__(self, ip, port, hub_connection_lost_hook):
+    def __init__(self, ip, port, hub_connection_lost_hook, check_registration):
         threading.Thread.__init__(self)
         self.daemon = True  # clean shut down of thread when hub connection is lost
         self.ping_frequency = 0.2  # Too spammy? # TODO Need to parametrize
         self._hub_connection_lost_hook = hub_connection_lost_hook
+        self._check_registration = check_registration
         self.ip = ip
         self.port = port
         self.pinger = rocon_python_utils.network.Pinger(self.ip, self.ping_frequency)
@@ -61,6 +62,10 @@ class HubConnectionCheckerThread(threading.Thread):
         timeout = 1 / self.ping_frequency
         while alive and not self.terminate_requested:
             alive, message = hub_client.ping_hub(self.ip, self.port, timeout)
+            if alive:
+                alive = self._check_registration()
+                if not alive:
+                    message = "Not registered at the hub"
             rate.sleep()
         if not alive:
             rospy.logwarn("Gateway : hub connection no longer alive, disengaging [%s]" % message)
@@ -173,7 +178,7 @@ class GatewayHub(rocon_hub_client.Hub):
 
         # Mark this gateway as now available
         self.hub_connection_checker_thread = HubConnectionCheckerThread(
-            self.ip, self.port, self._hub_connection_lost_hook)
+            self.ip, self.port, self._hub_connection_lost_hook, self.is_gateway_registered)
         self.hub_connection_checker_thread.start()
         self.connection_lost_lock = threading.Lock()
 
