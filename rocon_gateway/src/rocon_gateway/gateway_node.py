@@ -186,13 +186,13 @@ class GatewayNode():
           @type GatewayHub
         """
 
-        self._hub_discovery_thread.disengage_hub(hub)
         try:
             self._gateway.disengage_hub(hub)
         except AttributeError:
             # caused when self_gateway is NoneType object (can happen as we pass this
             # callback in without guaranteeing we have a gateway object yet)
             pass
+        self._hub_discovery_thread.disengage_hub(hub)
 
     ##########################################################################
     # Ros Pubs, Subs and Services

@@ -65,7 +65,7 @@ class HubConnectionCheckerThread(threading.Thread):
             if alive:
                 alive = self._check_registration()
                 if not alive:
-                    message = "Not registered at the hub"
+                    message = "Not registered on the hub."
             rate.sleep()
         if not alive:
             rospy.logwarn("Gateway : hub connection no longer alive, disengaging [%s]" % message)
