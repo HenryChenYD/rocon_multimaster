@@ -12,6 +12,7 @@ import threading
 import rospy
 import gateway_msgs.msg as gateway_msgs
 import rocon_hub_client
+import rocon_python_redis as redis
 
 from .exceptions import GatewayUnavailableError
 from . import gateway_hub
@@ -218,6 +219,8 @@ class HubManager(object):
             self.hubs.append(new_hub)
         except rocon_hub_client.HubError as e:
             return None, e.id, str(e)
+        except redis.exceptions.ConnectionError as ce:
+            return None, gateway_msgs.ErrorCodes.HUB_CONNECTION_FAILED, str(ce)
         finally:
             self._hub_lock.release()
         return new_hub, gateway_msgs.ErrorCodes.SUCCESS, "success"

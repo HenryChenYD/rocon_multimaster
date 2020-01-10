@@ -124,6 +124,9 @@ class GatewayHub(rocon_hub_client.Hub):
         '''
         if not self._redis_server:
             raise HubConnectionLostError()
+
+        if self._unique_gateway_name:
+            raise HubConnectionFailedError("Connection Failed while registering hub[gateway_hub's unique_gateway_name not empty]")
         self._unique_gateway_name = unique_gateway_name
         self.private_key, public_key = utils.generate_private_public_key()
 
