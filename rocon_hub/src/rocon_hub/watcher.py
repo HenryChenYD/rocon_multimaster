@@ -37,6 +37,7 @@ class WatcherThread(threading.Thread):
             rospy.logfatal("Hub Watcher: unable to connect to hub: %s" % str(e))
             sys.exit(-1)
         self.unavailable_gateways = []
+        self.starting_up_gateways = {}
 
     def run(self):
         '''
@@ -62,9 +63,19 @@ class WatcherThread(threading.Thread):
 
                 if expiration_time is None or expiration_time == -2:
                     # Probably in the process of starting up, ignore for now
-                    continue
-
-                seconds_since_last_seen = int(ConnectionStatistics.MAX_TTL - expiration_time)
+                    if name in self.starting_up_gateways:
+                        seconds_since_last_seen = int(rospy.Time.now().secs - self.starting_up_gateways[name])
+                        rospy.logwarn("Hub Watcher: gateway " + name +
+                                      " has invalid TTL as before, check it based on the time of discovery.")
+                    else:
+                        self.starting_up_gateways[name] = rospy.Time.now().secs
+                        rospy.logwarn("Hub Watcher: gateway " + name +
+                                      " probably in the process of starting up, ignore for now.")
+                        continue
+                else:
+                    seconds_since_last_seen = int(ConnectionStatistics.MAX_TTL - expiration_time)
+                    if name in self.starting_up_gateways:
+                        self.starting_up_gateways.pop(name)
 
                 # rospy.logwarn("<= Not seen since {0} secs...".format(seconds_since_last_seen))
 
